@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Safelist exercise color classes so Tailwind v4 doesn't purge them */
+@source inline("{bg,ring}-{blue,orange,red,purple,pink,teal}-{400,500} bg-gray-{200,700}");
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
