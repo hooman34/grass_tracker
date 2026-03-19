@@ -17,6 +17,18 @@ export default function DashboardClient({ initialEvents }: Props) {
   const todayEvent = events.find(e => e.logged_date === today);
 
   const handleLog = async (exercise_type: ExerciseType) => {
+    // Tapping the same type again → delete
+    if (todayEvent?.exercise_type === exercise_type) {
+      const res = await fetch('/api/log-event', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ logged_date: today }),
+      });
+      if (!res.ok) return;
+      setEvents(prev => prev.filter(e => e.logged_date !== today));
+      return;
+    }
+
     const res = await fetch('/api/log-event', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

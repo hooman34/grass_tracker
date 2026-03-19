@@ -1,15 +1,34 @@
-import { subDays, format } from 'date-fns';
+import { format, startOfYear, endOfYear, eachDayOfInterval } from 'date-fns';
 
-export function generate365DayGrid(): string[] {
+export function generateYearGrid(): string[] {
   const today = new Date();
-  const days: string[] = [];
-  for (let i = 364; i >= 0; i--) {
-    days.push(format(subDays(today, i), 'yyyy-MM-dd'));
-  }
-  return days;
+  const days = eachDayOfInterval({
+    start: startOfYear(today),
+    end: endOfYear(today),
+  });
+  return days.map(d => format(d, 'yyyy-MM-dd'));
 }
 
-export function getLeadingEmptyCells(days: string[]): number {
+// Groups days into weeks (columns), padding the first week with nulls so
+// day-of-week rows align correctly (Mon=row0 … Sun=row6).
+export function groupIntoWeeks(days: string[]): (string | null)[][] {
   const firstDay = new Date(days[0] + 'T12:00:00');
-  return firstDay.getDay(); // 0=Sun, 1=Mon, ...
+  // Convert to Monday-based index: Mon=0, Tue=1, ... Sun=6
+  const leadingEmpties = (firstDay.getDay() + 6) % 7;
+
+  const allCells: (string | null)[] = [
+    ...Array<null>(leadingEmpties).fill(null),
+    ...days,
+  ];
+
+  const weeks: (string | null)[][] = [];
+  for (let i = 0; i < allCells.length; i += 7) {
+    weeks.push(allCells.slice(i, i + 7));
+  }
+
+  // Pad the last week to 7 rows so today lands in the correct day-of-week row
+  const lastWeek = weeks[weeks.length - 1];
+  while (lastWeek.length < 7) lastWeek.push(null);
+
+  return weeks;
 }

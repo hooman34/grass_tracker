@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     .from('users')
     .select('timezone')
     .eq('id', user.id)
-    .single();
+    .maybeSingle();
 
   if (profileError) {
     console.error('[log-event] Failed to fetch user profile:', profileError.message);
@@ -61,4 +61,41 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ data }, { status: 200 });
+}
+
+export async function DELETE(request: NextRequest) {
+  const supabase = await createClient();
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (!user || authError) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { logged_date } = await request.json() as { logged_date: string };
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('timezone')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  const tz = profile?.timezone ?? 'UTC';
+  const todayInUserTz = formatInTimeZone(new Date(), tz, 'yyyy-MM-dd');
+
+  if (logged_date !== todayInUserTz) {
+    return NextResponse.json({ error: 'Past records are locked.' }, { status: 403 });
+  }
+
+  const { error } = await supabase
+    .from('tracked_events')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('logged_date', logged_date);
+
+  if (error) {
+    console.error('[log-event] Delete failed:', error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true }, { status: 200 });
 }

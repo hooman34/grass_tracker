@@ -13,8 +13,7 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
-  const oneYearAgo = new Date();
-  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+  const startOfThisYear = new Date(new Date().getFullYear(), 0, 1);
 
   const [
     { data: events, error: eventsError },
@@ -24,17 +23,28 @@ export default async function DashboardPage() {
       .from('tracked_events')
       .select('*')
       .eq('user_id', user.id)
-      .gte('logged_date', oneYearAgo.toISOString().split('T')[0])
+      .gte('logged_date', startOfThisYear.toISOString().split('T')[0])
       .order('logged_date', { ascending: true }),
     supabase
       .from('users')
       .select('username, timezone')
       .eq('id', user.id)
-      .single(),
+      .maybeSingle(),
   ]);
 
   if (eventsError) console.error('[dashboard] events fetch error:', eventsError.message);
   if (profileError) console.error('[dashboard] profile fetch error:', profileError.message);
+
+  // If no profile row exists (e.g. signed up before trigger was created), create one now
+  if (!profile) {
+    console.log('[dashboard] No profile found, creating fallback profile for user:', user.id);
+    const { error: insertError } = await supabase.from('users').upsert({
+      id: user.id,
+      username: user.email?.split('@')[0] ?? `user_${user.id.slice(0, 8)}`,
+      timezone: 'UTC',
+    }, { onConflict: 'id' });
+    if (insertError) console.error('[dashboard] Profile creation failed:', insertError.message);
+  }
 
   console.log('[dashboard] user=%s events=%d profile=%s', user.id, events?.length ?? 0, profile?.username);
 
