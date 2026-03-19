@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
+import { createClient } from '@/lib/supabase/client';
 import WorkoutPicker from '@/components/tracker/WorkoutPicker';
 import ContributionGraph from '@/components/graph/ContributionGraph';
 import GraphLegend from '@/components/graph/GraphLegend';
@@ -14,6 +15,13 @@ interface Props {
 export default function DashboardClient({ initialEvents }: Props) {
   const [events, setEvents] = useState<TrackedEvent[]>(initialEvents);
   const today = format(new Date(), 'yyyy-MM-dd');
+
+  // Sync browser timezone to DB on mount
+  useEffect(() => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const supabase = createClient();
+    supabase.from('users').update({ timezone: tz }).eq('timezone', 'UTC').then(() => {});
+  }, []);
   const todayEvent = events.find(e => e.logged_date === today);
 
   const handleLog = async (exercise_type: ExerciseType) => {
