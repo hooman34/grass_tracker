@@ -5,13 +5,21 @@ import DashboardClient from './DashboardClient';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError) console.error('[dashboard] getUser error:', authError.message);
+  if (!user) {
+    console.log('[dashboard] No user, redirecting to login');
+    redirect('/login');
+  }
 
   const oneYearAgo = new Date();
   oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
-  const [{ data: events }, { data: profile }] = await Promise.all([
+  const [
+    { data: events, error: eventsError },
+    { data: profile, error: profileError },
+  ] = await Promise.all([
     supabase
       .from('tracked_events')
       .select('*')
@@ -24,6 +32,11 @@ export default async function DashboardPage() {
       .eq('id', user.id)
       .single(),
   ]);
+
+  if (eventsError) console.error('[dashboard] events fetch error:', eventsError.message);
+  if (profileError) console.error('[dashboard] profile fetch error:', profileError.message);
+
+  console.log('[dashboard] user=%s events=%d profile=%s', user.id, events?.length ?? 0, profile?.username);
 
   return (
     <>

@@ -10,6 +10,7 @@ export async function POST(request: NextRequest) {
 
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (!user || authError) {
+    console.error('[log-event] Auth failed:', authError?.message);
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -20,17 +21,23 @@ export async function POST(request: NextRequest) {
   };
 
   if (!VALID_TYPES.includes(exercise_type)) {
+    console.error('[log-event] Invalid exercise type:', exercise_type);
     return NextResponse.json({ error: 'Invalid exercise type' }, { status: 400 });
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('users')
     .select('timezone')
     .eq('id', user.id)
     .single();
 
+  if (profileError) {
+    console.error('[log-event] Failed to fetch user profile:', profileError.message);
+  }
+
   const tz = profile?.timezone ?? 'UTC';
   const todayInUserTz = formatInTimeZone(new Date(), tz, 'yyyy-MM-dd');
+  console.log('[log-event] user=%s tz=%s today=%s logged_date=%s', user.id, tz, todayInUserTz, logged_date);
 
   if (logged_date !== todayInUserTz) {
     return NextResponse.json(
@@ -49,6 +56,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) {
+    console.error('[log-event] Upsert failed:', error.message, error.details);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
