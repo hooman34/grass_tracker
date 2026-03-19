@@ -30,7 +30,6 @@ export default function Navbar() {
         </Link>
         <div className="flex items-center gap-1">
           <Link href="/dashboard" className={linkClass('/dashboard')}>Dashboard</Link>
-          <Link href="/feed" className={linkClass('/feed')}>Feed</Link>
           <button
             onClick={handleSignOut}
             className="ml-2 text-sm font-medium px-3 py-1.5 rounded-md text-red-600 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"

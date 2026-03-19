@@ -8,20 +8,15 @@ interface Props {
 }
 
 export default function GraphSquare({ date, exerciseType, size = 'md' }: Props) {
-  const colorClass = exerciseType
-    ? EXERCISE_COLORS[exerciseType]
-    : EXERCISE_COLORS.empty;
-
-  const tooltip = exerciseType
-    ? `${EXERCISE_LABELS[exerciseType]} — ${date}`
-    : date;
-
+  const color = exerciseType ? EXERCISE_COLORS[exerciseType] : EXERCISE_COLORS.empty;
+  const tooltip = exerciseType ? `${EXERCISE_LABELS[exerciseType]} — ${date}` : date;
   const sizeClass = size === 'sm' ? 'w-2 h-2' : 'w-3 h-3';
 
   return (
     <div
       title={tooltip}
-      className={`${sizeClass} rounded-sm cursor-default transition-opacity hover:opacity-75 ${colorClass}`}
+      style={{ backgroundColor: color }}
+      className={`${sizeClass} rounded-sm cursor-default transition-opacity hover:opacity-75`}
       aria-label={tooltip}
     />
   );
