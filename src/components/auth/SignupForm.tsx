@@ -52,7 +52,8 @@ export default function SignupForm() {
           required
           value={username}
           onChange={e => setUsername(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          style={{ backgroundColor: '#ffffff', color: '#171717' }}
         />
       </div>
       <div>
@@ -63,7 +64,8 @@ export default function SignupForm() {
           required
           value={email}
           onChange={e => setEmail(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          style={{ backgroundColor: '#ffffff', color: '#171717' }}
         />
       </div>
       <div>
@@ -75,7 +77,8 @@ export default function SignupForm() {
           minLength={6}
           value={password}
           onChange={e => setPassword(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          style={{ backgroundColor: '#ffffff', color: '#171717' }}
         />
       </div>
       {error && <p className="text-red-500 text-sm">{error}</p>}
