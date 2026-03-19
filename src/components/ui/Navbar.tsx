@@ -26,7 +26,7 @@ export default function Navbar() {
     <nav className="border-b border-gray-200 dark:border-gray-800">
       <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
         <Link href="/dashboard" className="font-bold text-lg tracking-tight">
-          GreenSquare
+          Grass Tracker
         </Link>
         <div className="flex items-center gap-1">
           <Link href="/dashboard" className={linkClass('/dashboard')}>Dashboard</Link>
