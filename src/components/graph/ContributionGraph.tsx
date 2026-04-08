@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { TrackedEvent } from '@/types';
 import { generateYearGrid, groupIntoWeeks } from '@/lib/utils';
-import GraphSquare from './GraphSquare';
+import { EXERCISE_COLORS } from '@/lib/constants';
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -21,43 +21,63 @@ export default function ContributionGraph({ events, size = 'md' }: Props) {
     }
   }, []);
 
-  const days = generateYearGrid();
-  const weeks = groupIntoWeeks(days);
-  const eventMap = new Map(events.map(e => [e.logged_date, e.exercise_type]));
-  const gap = size === 'sm' ? 'gap-[2px]' : 'gap-[3px]';
-  const cellClass = size === 'sm' ? 'w-2 h-2' : 'w-3 h-3';
-  const labelClass = 'text-[10px] text-gray-400 leading-none';
-  const cellSize = size === 'sm' ? 8 : 12;
+  const cell = size === 'sm' ? 8 : 12;
+  const gap = size === 'sm' ? 2 : 3;
+  const step = cell + gap;
+  const labelWidth = size === 'md' ? 28 : 0;
+
+  const { weeks, eventMap } = useMemo(() => {
+    const days = generateYearGrid();
+    return {
+      weeks: groupIntoWeeks(days),
+      eventMap: new Map(events.map(e => [e.logged_date, e.exercise_type])),
+    };
+  }, [events]);
+
+  const width = labelWidth + weeks.length * step - gap;
+  const height = 7 * step - gap;
 
   return (
     <div ref={scrollRef} className="overflow-x-auto">
-      <div className={`flex ${gap}`}>
-        {size === 'md' && (
-          <div className={`flex flex-col ${gap} mr-1`}>
-            {DAY_LABELS.map(label => (
-              <div key={label} style={{ height: cellSize }} className={`flex items-center ${labelClass}`}>
-                {label}
-              </div>
-            ))}
-          </div>
+      <svg
+        width={width}
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label={`Workout activity, ${events.length} active days`}
+        shapeRendering="crispEdges"
+      >
+        {size === 'md' &&
+          DAY_LABELS.map((label, i) => (
+            <text
+              key={label}
+              x={0}
+              y={i * step + cell - 1}
+              fontSize={10}
+              fill="#9ca3af"
+            >
+              {label}
+            </text>
+          ))}
+        {weeks.map((week, wi) =>
+          week.map((date, di) => {
+            if (!date) return null;
+            const type = eventMap.get(date);
+            const fill = type ? EXERCISE_COLORS[type] : EXERCISE_COLORS.empty;
+            return (
+              <rect
+                key={date}
+                x={labelWidth + wi * step}
+                y={di * step}
+                width={cell}
+                height={cell}
+                rx={1.5}
+                fill={fill}
+              />
+            );
+          })
         )}
-        {weeks.map((week, wi) => (
-          <div key={wi} className={`flex flex-col ${gap}`}>
-            {week.map((date, di) =>
-              date ? (
-                <GraphSquare
-                  key={date}
-                  date={date}
-                  exerciseType={eventMap.get(date) ?? null}
-                  size={size}
-                />
-              ) : (
-                <div key={`empty-${wi}-${di}`} className={cellClass} />
-              )
-            )}
-          </div>
-        ))}
-      </div>
+      </svg>
     </div>
   );
 }
