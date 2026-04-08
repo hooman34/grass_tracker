@@ -25,7 +25,7 @@ export default function WorkoutPicker({ currentSelection, onLog }: Props) {
           ? `Today: ${EXERCISE_LABELS[currentSelection]} — tap to change or deselect`
           : 'What did you do today?'}
       </p>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+      <div className="grid grid-cols-3 lg:grid-cols-6 gap-2">
         {EXERCISE_CATEGORIES.map(type => {
           const isSelected = currentSelection === type;
           const isLoading = loading === type;

@@ -9,10 +9,17 @@ interface Props {
 
 export default function FeedCard({ user, events }: Props) {
   return (
-    <div className="border border-gray-200 dark:border-gray-800 rounded-xl p-4">
+    <div className="border border-gray-200 dark:border-gray-800 rounded-xl p-3 sm:p-4">
       <p className="font-semibold text-sm mb-3">{user.username}</p>
-      <ContributionGraph events={events} size="sm" />
-      <GraphLegend />
+      <div className="sm:hidden">
+        <ContributionGraph events={events} lastNWeeks={13} />
+      </div>
+      <div className="hidden sm:block">
+        <ContributionGraph events={events} size="sm" />
+      </div>
+      <div className="hidden sm:block">
+        <GraphLegend />
+      </div>
     </div>
   );
 }

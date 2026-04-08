@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef } from 'react';
+import { format } from 'date-fns';
 import { TrackedEvent } from '@/types';
 import { generateYearGrid, groupIntoWeeks } from '@/lib/utils';
 import { EXERCISE_COLORS } from '@/lib/constants';
@@ -10,9 +11,11 @@ const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 interface Props {
   events: TrackedEvent[];
   size?: 'sm' | 'md';
+  /** If set, only render the last N weeks ending with today's week. */
+  lastNWeeks?: number;
 }
 
-export default function ContributionGraph({ events, size = 'md' }: Props) {
+export default function ContributionGraph({ events, size = 'md', lastNWeeks }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -24,15 +27,25 @@ export default function ContributionGraph({ events, size = 'md' }: Props) {
   const cell = size === 'sm' ? 8 : 12;
   const gap = size === 'sm' ? 2 : 3;
   const step = cell + gap;
-  const labelWidth = size === 'md' ? 28 : 0;
+  // Drop the day-label gutter on the windowed view to save horizontal space.
+  const showDayLabels = size === 'md' && !lastNWeeks;
+  const labelWidth = showDayLabels ? 28 : 0;
 
   const { weeks, eventMap } = useMemo(() => {
-    const days = generateYearGrid();
+    const allWeeks = groupIntoWeeks(generateYearGrid());
+    let visibleWeeks = allWeeks;
+    if (lastNWeeks) {
+      const todayStr = format(new Date(), 'yyyy-MM-dd');
+      let todayIdx = allWeeks.findIndex(w => w.includes(todayStr));
+      if (todayIdx === -1) todayIdx = allWeeks.length - 1;
+      const start = Math.max(0, todayIdx - lastNWeeks + 1);
+      visibleWeeks = allWeeks.slice(start, todayIdx + 1);
+    }
     return {
-      weeks: groupIntoWeeks(days),
+      weeks: visibleWeeks,
       eventMap: new Map(events.map(e => [e.logged_date, e.exercise_type])),
     };
-  }, [events]);
+  }, [events, lastNWeeks]);
 
   const width = labelWidth + weeks.length * step - gap;
   const height = 7 * step - gap;
@@ -47,7 +60,7 @@ export default function ContributionGraph({ events, size = 'md' }: Props) {
         aria-label={`Workout activity, ${events.length} active days`}
         shapeRendering="crispEdges"
       >
-        {size === 'md' &&
+        {showDayLabels &&
           DAY_LABELS.map((label, i) => (
             <text
               key={label}

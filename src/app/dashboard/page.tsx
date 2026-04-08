@@ -68,8 +68,8 @@ export default async function DashboardPage() {
   return (
     <>
       <Navbar />
-      <main className="max-w-5xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">
+      <main className="max-w-5xl mx-auto px-4 py-4 sm:py-8">
+        <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
           {profile?.username ?? 'Your'} Activity
         </h1>
         <DashboardClient
