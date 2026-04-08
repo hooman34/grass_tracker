@@ -10,18 +10,22 @@ import { ExerciseType, TrackedEvent } from '@/types';
 
 interface Props {
   initialEvents: TrackedEvent[];
+  userId: string;
+  currentTimezone: string;
 }
 
-export default function DashboardClient({ initialEvents }: Props) {
+export default function DashboardClient({ initialEvents, userId, currentTimezone }: Props) {
   const [events, setEvents] = useState<TrackedEvent[]>(initialEvents);
   const today = format(new Date(), 'yyyy-MM-dd');
 
-  // Sync browser timezone to DB on mount
+  // Sync browser timezone to DB on mount, but only if it's still UTC (unset)
   useEffect(() => {
+    if (currentTimezone !== 'UTC') return;
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (!tz || tz === 'UTC') return;
     const supabase = createClient();
-    supabase.from('users').update({ timezone: tz }).eq('timezone', 'UTC').then(() => {});
-  }, []);
+    supabase.from('users').update({ timezone: tz }).eq('id', userId).then(() => {});
+  }, [userId, currentTimezone]);
   const todayEvent = events.find(e => e.logged_date === today);
 
   const handleLog = async (exercise_type: ExerciseType) => {
@@ -32,7 +36,11 @@ export default function DashboardClient({ initialEvents }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ logged_date: today }),
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        const body = await res.json();
+        console.error('[delete] failed:', res.status, body);
+        return;
+      }
       setEvents(prev => prev.filter(e => e.logged_date !== today));
       return;
     }

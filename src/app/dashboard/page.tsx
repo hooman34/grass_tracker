@@ -21,7 +21,6 @@ export default async function DashboardPage() {
     { data: events, error: eventsError },
     { data: profile, error: profileError },
     { data: allUsers },
-    { data: allEvents },
   ] = await Promise.all([
     supabase
       .from('tracked_events')
@@ -40,12 +39,16 @@ export default async function DashboardPage() {
       .neq('id', user.id)
       .order('created_at', { ascending: false })
       .limit(50),
-    supabase
-      .from('tracked_events')
-      .select('*')
-      .neq('user_id', user.id)
-      .gte('logged_date', cutoff),
   ]);
+
+  const feedUserIds = (allUsers ?? []).map(u => u.id);
+  const { data: allEvents } = feedUserIds.length
+    ? await supabase
+        .from('tracked_events')
+        .select('*')
+        .in('user_id', feedUserIds)
+        .gte('logged_date', cutoff)
+    : { data: [] as typeof events };
 
   if (eventsError) console.error('[dashboard] events fetch error:', eventsError.message);
   if (profileError) console.error('[dashboard] profile fetch error:', profileError.message);
@@ -69,7 +72,11 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-bold mb-6">
           {profile?.username ?? 'Your'} Activity
         </h1>
-        <DashboardClient initialEvents={events ?? []} />
+        <DashboardClient
+          initialEvents={events ?? []}
+          userId={user.id}
+          currentTimezone={profile?.timezone ?? 'UTC'}
+        />
 
         {(allUsers ?? []).length > 0 && (
           <>
