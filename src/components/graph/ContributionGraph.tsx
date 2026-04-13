@@ -11,41 +11,37 @@ const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 interface Props {
   events: TrackedEvent[];
   size?: 'sm' | 'md';
-  /** If set, only render the last N weeks ending with today's week. */
-  lastNWeeks?: number;
 }
 
-export default function ContributionGraph({ events, size = 'md', lastNWeeks }: Props) {
+export default function ContributionGraph({ events, size = 'md' }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
-    }
-  }, []);
+  const todayRef = useRef<SVGRectElement>(null);
 
   const cell = size === 'sm' ? 8 : 12;
   const gap = size === 'sm' ? 2 : 3;
   const step = cell + gap;
-  // Drop the day-label gutter on the windowed view to save horizontal space.
-  const showDayLabels = size === 'md' && !lastNWeeks;
+  const showDayLabels = size === 'md';
   const labelWidth = showDayLabels ? 28 : 0;
+
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
 
   const { weeks, eventMap } = useMemo(() => {
     const allWeeks = groupIntoWeeks(generateYearGrid());
-    let visibleWeeks = allWeeks;
-    if (lastNWeeks) {
-      const todayStr = format(new Date(), 'yyyy-MM-dd');
-      let todayIdx = allWeeks.findIndex(w => w.includes(todayStr));
-      if (todayIdx === -1) todayIdx = allWeeks.length - 1;
-      const start = Math.max(0, todayIdx - lastNWeeks + 1);
-      visibleWeeks = allWeeks.slice(start, todayIdx + 1);
-    }
     return {
-      weeks: visibleWeeks,
+      weeks: allWeeks,
       eventMap: new Map(events.map(e => [e.logged_date, e.exercise_type])),
     };
-  }, [events, lastNWeeks]);
+  }, [events]);
+
+  useEffect(() => {
+    if (todayRef.current && scrollRef.current) {
+      const container = scrollRef.current;
+      const rect = todayRef.current;
+      // Scroll so today's cell is near the right side of the visible area
+      const cellLeft = rect.x.baseVal.value;
+      container.scrollLeft = cellLeft - container.clientWidth + step * 2;
+    }
+  }, [weeks, step]);
 
   const width = labelWidth + weeks.length * step - gap;
   const height = 7 * step - gap;
@@ -77,9 +73,11 @@ export default function ContributionGraph({ events, size = 'md', lastNWeeks }: P
             if (!date) return null;
             const type = eventMap.get(date);
             const fill = type ? EXERCISE_COLORS[type] : EXERCISE_COLORS.empty;
+            const isToday = date === todayStr;
             return (
               <rect
                 key={date}
+                ref={isToday ? todayRef : undefined}
                 x={labelWidth + wi * step}
                 y={di * step}
                 width={cell}

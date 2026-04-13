@@ -61,12 +61,7 @@ export default function DashboardClient({ initialEvents, userId, currentTimezone
 
   return (
     <>
-      <div className="sm:hidden">
-        <ContributionGraph events={events} lastNWeeks={13} />
-      </div>
-      <div className="hidden sm:block">
-        <ContributionGraph events={events} />
-      </div>
+      <ContributionGraph events={events} />
       <GraphLegend />
       <div className="mt-6 sm:mt-8">
         <WorkoutPicker
