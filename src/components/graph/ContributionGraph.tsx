@@ -47,7 +47,7 @@ export default function ContributionGraph({ events, size = 'md' }: Props) {
   const height = 7 * step - gap;
 
   return (
-    <div ref={scrollRef} className="overflow-x-auto">
+    <div ref={scrollRef} className="overflow-x-auto max-w-full">
       <svg
         width={width}
         height={height}
