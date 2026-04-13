@@ -61,7 +61,7 @@ export default function DashboardClient({ initialEvents, userId, currentTimezone
 
   return (
     <>
-      <div className="sm:hidden">
+      <div className="overflow-hidden sm:hidden">
         <ContributionGraph events={events} size="sm" />
       </div>
       <div className="hidden sm:block">
